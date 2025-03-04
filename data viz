@@ -3,49 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bar Graph Visualization</title>
+    <title>NYC Population Bar Graph</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 1px solid black;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <canvas id="myCanvas" width="500" height="400"></canvas>
+    <h2>NYC Population (2010 - 2024)</h2>
+    <canvas id="populationChart" width="900" height="500"></canvas>
+
     <script>
         class BarGraph {
-            constructor(data, x = 0, y = 0, width = 400, height = 300) {
-                this.data = data; // Data array
-                this.x = x;
-                this.y = y;
-                this.width = width;
-                this.height = height;
-                this.barWidth = this.width / data.length - 10; // Adds spacing between bars
+            constructor(data, options = {}) {
+                this.data = data;
+                this.x = options.x || 50;
+                this.y = options.y || 50;
+                this.width = options.width || 800;
+                this.height = options.height || 400;
+                this.barColor = options.barColor || 'blue';
+                this.axisColor = options.axisColor || 'black';
+                this.labelColor = options.labelColor || 'black';
             }
 
             draw(context) {
-                context.clearRect(0, 0, context.canvas.width, context.canvas.height); // Clear canvas
-                context.fillStyle = "black";
-                context.fillRect(this.x, this.y, this.width, this.height); // Background
+                if (!context) {
+                    console.error("Canvas context is not available.");
+                    return;
+                }
 
-                const maxData = Math.max(...this.data); // Find max value for scaling
+                const years = Object.keys(this.data);
+                const populations = Object.values(this.data);
 
-                this.data.forEach((value, index) => {
-                    let barHeight = (value / maxData) * this.height; // Scale bars
-                    let barX = this.x + index * (this.barWidth + 10); // Add spacing
-                    let barY = this.y + (this.height - barHeight);
+                const maxPopulation = Math.max(...populations);
+                const barWidth = this.width / years.length - 5; // Adding spacing between bars
 
-                    context.fillStyle = "blue";
-                    context.fillRect(barX, barY, this.barWidth, barHeight); // Draw bars
+                // Draw axes
+                context.strokeStyle = this.axisColor;
+                context.lineWidth = 2;
+                context.beginPath();
+                context.moveTo(this.x, this.y); // Y-axis
+                context.lineTo(this.x, this.y + this.height);
+                context.lineTo(this.x + this.width, this.y + this.height); // X-axis
+                context.stroke();
+
+                // Draw bars
+                years.forEach((year, index) => {
+                    const barHeight = (populations[index] / maxPopulation) * this.height;
+                    const barX = this.x + index * (barWidth + 5);
+                    const barY = this.y + this.height - barHeight;
+
+                    // Draw bar
+                    context.fillStyle = this.barColor;
+                    context.fillRect(barX, barY, barWidth, barHeight);
+
+                    // Draw population labels
+                    context.fillStyle = this.labelColor;
+                    context.font = "12px Arial";
+                    context.textAlign = "center";
+                    context.fillText(populations[index].toLocaleString(), barX + barWidth / 2, barY - 5);
+
+                    // Draw year labels
+                    context.fillText(year, barX + barWidth / 2, this.y + this.height + 15);
                 });
             }
         }
 
-        // Get canvas context
-        const canvas = document.getElementById("myCanvas");
-        const ctx = canvas.getContext("2d");
+        const nycPopulationData = {
+            2010: 8175133,
+            2011: 8244910,
+            2012: 8325000,
+            2013: 8399000,
+            2014: 8468000,
+            2015: 8538000,
+            2016: 8601000,
+            2017: 8667000,
+            2018: 8398748,
+            2019: 8336817,
+            2020: 8804190,
+            2021: 8700000, // Estimated
+            2022: 8500000, // Estimated
+            2023: 8300000, // Estimated
+            2024: 8097282  // Estimated
+        };
 
-        // Sample data
-        const data = [10, 30, 50, 40, 60, 80, 100];
+        window.onload = function () {
+            const canvas = document.getElementById('populationChart');
+            if (!canvas) {
+                console.error("Canvas element not found.");
+                return;
+            }
 
-        // Create and draw graph
-        const graph = new BarGraph(data, 50, 50, 400, 300);
-        graph.draw(ctx);
+            const context = canvas.getContext('2d');
+            if (!context) {
+                console.error("Canvas rendering context not found.");
+                return;
+            }
+
+            const options = {
+                x: 50,
+                y: 50,
+                width: 800,
+                height: 400,
+                barColor: 'blue',
+                axisColor: 'black',
+                labelColor: 'black'
+            };
+
+            const nycBarGraph = new BarGraph(nycPopulationData, options);
+            nycBarGraph.draw(context);
+        };
     </script>
 </body>
 </html>
+
